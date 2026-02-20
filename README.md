@@ -2,7 +2,7 @@
 
 > **Naweji Enterprise Reliability Platform (NERP)**
 
-> Created and owned by **Rev. Dr. Emmanuel Naweji**
+> Created and owned by **Emmanuel Naweji**
 
 > Copyright (c) 2026. All rights reserved.
 
@@ -218,4 +218,4 @@ docker compose logs nerp-payment-gateway --tail 20
 
 **NERP — Naweji Enterprise Reliability Platform**
 *This project simulates the NERP Fintech vertical for local development and testing.*
-*Created and maintained by Rev. Dr. Emmanuel Naweji. Copyright (c) 2026. All rights reserved.*
+*Created and maintained Emmanuel Naweji. Copyright (c) 2026. All rights reserved.*
