@@ -3,7 +3,6 @@
 > **Naweji Enterprise Reliability Platform (NERP)**
 > Created and owned by **Rev. Dr. Emmanuel Naweji**
 > Copyright (c) 2026. All rights reserved.
-> https://github.com/Here2ServeU/Naweji-Reliability-Platform
 
 ---
 
