@@ -16,7 +16,7 @@ The purpose of this simulation is to demonstrate how the NERP Fintech vertical o
 
 ### What is NERP?
 
-**NERP (Naweji Enterprise Reliability Platform)** is a unified framework for building, deploying, and operating mission-critical microservices across industries. It is owned and maintained by **Rev. Dr. Emmanuel Naweji**.
+**NERP (Naweji Enterprise Reliability Platform)** is a unified framework for building, deploying, and operating mission-critical microservices across industries. It is owned and maintained by **Rev. Dr. Emmanuel Naweji**. NERP emerged from Ph.D. research in AI/ML, Robotics, and Quantum Computing applied to regulated environments such as healthcare systems and financial institutions.
 
 NERP is built on three core principles:
 
