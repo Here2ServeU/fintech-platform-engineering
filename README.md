@@ -214,6 +214,143 @@ docker compose logs nerp-fraud-detector --tail 20
 docker compose logs nerp-payment-gateway --tail 20
 ```
 
+## Next Steps: Making NERP Cloud-Ready
+
+The following roadmap outlines how to evolve this local simulation into a production-grade cloud deployment.
+
+### Step 1 — Externalize Configuration
+
+Replace hardcoded environment variables with a centralized config strategy:
+
+- Use a `.env` file or **HashiCorp Vault** for secrets (API keys, DB credentials, fraud thresholds).
+- Inject configuration via environment variables at deploy time — never bake secrets into images.
+- Introduce a shared `config.py` module that reads from `os.environ` with sensible defaults for local dev.
+
+### Step 2 — Add Persistent Storage
+
+The current simulation holds all data in memory. For cloud readiness:
+
+- **Transaction Engine** → connect to **PostgreSQL** or **Amazon Aurora** for durable transaction records.
+- **Fraud Detector** → integrate **Redis** for scoring cache and rate-limiting state.
+- **Payment Gateway** → persist settlement batches to a database for audit trails.
+- Use SQLAlchemy or a lightweight ORM to keep the migration path clean.
+
+### Step 3 — Add Observability
+
+Production services need more than `/health` and `/metrics`:
+
+- **Structured logging** → ship JSON logs to **CloudWatch**, **Datadog**, or an **ELK stack**.
+- **Distributed tracing** → instrument with **OpenTelemetry** and export to **Jaeger** or **AWS X-Ray**.
+- **Metrics** → expose Prometheus-format metrics and scrape with **Prometheus + Grafana** or a managed equivalent.
+- **Alerting** → define SLOs (e.g., p99 latency < 200ms, fraud scoring < 50ms) and alert on breaches.
+
+### Step 4 — Secure the Services
+
+- Add **API authentication** (JWT or API key middleware) to all endpoints.
+- Enable **TLS termination** at the load balancer or API gateway level.
+- Restrict `/ops/chaos/*` endpoints to internal networks or authenticated operators only.
+- Run containers as non-root users in the Dockerfiles (`USER appuser`).
+- Scan images for vulnerabilities with **Trivy** or **Snyk**.
+
+### Step 5 — Containerize for Production
+
+Update the Dockerfiles for production-grade builds:
+
+- Use **multi-stage builds** to minimize image size.
+- Pin exact dependency versions in `requirements.txt`.
+- Add `HEALTHCHECK` instructions to each Dockerfile.
+- Tag images with commit SHA or semantic version (not `latest`).
+
+### Step 6 — Set Up CI/CD
+
+Automate the build-test-deploy pipeline:
+
+- **CI** (GitHub Actions, GitLab CI, or Jenkins):
+  - Lint and unit test on every push.
+  - Build and push Docker images to a container registry (ECR, GCR, Docker Hub).
+  - Run integration tests against the Docker Compose stack.
+- **CD** (ArgoCD, Flux, or pipeline-native deploy):
+  - Deploy to a staging environment on merge to `main`.
+  - Promote to production after approval or automated canary validation.
+
+## Shipping to the Cloud
+
+Once the services are cloud-ready, choose a deployment target and ship.
+
+### Option A — Kubernetes (EKS / GKE / AKS)
+
+This is the recommended path for production NERP deployments.
+
+1. **Create Kubernetes manifests** (or Helm charts) for each service:
+   - `Deployment` with resource limits, readiness/liveness probes, and replica count.
+   - `Service` (ClusterIP) for internal communication between NERP services.
+   - `Ingress` or `Gateway API` for external traffic routing.
+   - `ConfigMap` and `Secret` for environment configuration.
+
+2. **Push images to a container registry:**
+   ```bash
+   # Example: Amazon ECR
+   aws ecr get-login-password | docker login --username AWS --password-stdin <account>.dkr.ecr.<region>.amazonaws.com
+   docker build -t nerp-transaction-engine .
+   docker tag nerp-transaction-engine:latest <account>.dkr.ecr.<region>.amazonaws.com/nerp-transaction-engine:v1.0.0
+   docker push <account>.dkr.ecr.<region>.amazonaws.com/nerp-transaction-engine:v1.0.0
+   ```
+
+3. **Deploy to the cluster:**
+   ```bash
+   kubectl apply -f k8s/
+   # or
+   helm install nerp-fintech ./charts/nerp-fintech
+   ```
+
+4. **Set up autoscaling:**
+   - Horizontal Pod Autoscaler (HPA) based on CPU/memory or custom metrics (e.g., transactions per second).
+
+### Option B — Serverless Containers (AWS Fargate / Google Cloud Run)
+
+A simpler path for teams that don't need full Kubernetes orchestration.
+
+1. **Push images** to ECR or Artifact Registry.
+2. **Define task/service definitions** with CPU, memory, port mappings, and environment variables.
+3. **Deploy:**
+   ```bash
+   # Example: AWS Fargate via ECS
+   aws ecs create-service \
+     --cluster nerp-fintech \
+     --service-name nerp-transaction-engine \
+     --task-definition nerp-transaction-engine:1 \
+     --desired-count 2 \
+     --launch-type FARGATE
+   ```
+4. **Attach a load balancer** (ALB or Cloud Load Balancing) for traffic distribution and TLS.
+
+### Option C — VM-Based (EC2 / Compute Engine)
+
+For simpler deployments or regulated environments that require VM-level isolation.
+
+1. **Provision VMs** with Docker installed.
+2. **Copy `docker-compose.yaml`** and images to the host.
+3. **Run:**
+   ```bash
+   docker compose up -d
+   ```
+4. Place behind a **load balancer** and configure **systemd** to restart services on failure.
+
+### Cloud Deployment Checklist
+
+| Task                                  | Status  |
+|---------------------------------------|---------|
+| Externalize secrets and config        | Pending |
+| Add persistent database               | Pending |
+| Instrument with OpenTelemetry         | Pending |
+| Add authentication to API endpoints   | Pending |
+| Production Dockerfile optimizations   | Pending |
+| CI/CD pipeline configured             | Pending |
+| Container images pushed to registry   | Pending |
+| Kubernetes manifests or Helm charts   | Pending |
+| TLS and domain configured             | Pending |
+| Autoscaling and monitoring in place   | Pending |
+
 ---
 
 **NERP — Naweji Enterprise Reliability Platform**
