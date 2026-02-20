@@ -1,0 +1,55 @@
+# ===========================================================================
+# NERP - Naweji Enterprise Reliability Platform
+# Fintech Vertical — Local Testing Configuration
+# Copyright (c) 2026 Rev. Dr. Emmanuel Naweji. All rights reserved.
+# ===========================================================================
+
+services:
+  # NERP Transaction Engine: Core payment processing service
+  nerp-transaction-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nerp_transaction_engine
+    ports:
+      - "8090:8090"
+    environment:
+      SERVICE_NAME: nerp-transaction-engine
+      FRAUD_DETECTION_URL: http://nerp-fraud-detector:8091/score
+      PAYMENT_GATEWAY_PRIMARY: nerp-payment-gateway:8092
+    depends_on:
+      - nerp-fraud-detector
+      - nerp-payment-gateway
+    networks:
+      - nerp-fintech-net
+
+  # NERP Fraud Detector: Real-time ML-based fraud scoring
+  nerp-fraud-detector:
+    build:
+      context: .
+      dockerfile: Dockerfile.fraud
+    container_name: nerp_fraud_detector
+    ports:
+      - "8091:8091"
+    environment:
+      SERVICE_NAME: nerp-fraud-detector
+      FRAUD_THRESHOLD: "0.85"
+    networks:
+      - nerp-fintech-net
+
+  # NERP Payment Gateway: Simulates payment processor interactions
+  nerp-payment-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
+    container_name: nerp_payment_gateway
+    ports:
+      - "8092:8092"
+    environment:
+      SERVICE_NAME: nerp-payment-gateway
+    networks:
+      - nerp-fintech-net
+
+networks:
+  nerp-fintech-net:
+    driver: bridge
